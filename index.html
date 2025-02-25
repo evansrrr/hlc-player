@@ -31,6 +31,20 @@
         </div>
     </div>
 
+    <div class="controls">
+        <span id="loading" style="display:none; color:blue;">加载中...</span>
+    </div>
+    
+    <script>
+        function loadStream() {
+            document.getElementById('loading').style.display = 'block';
+            // ...原有代码...
+            hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+    </script>
+
     <script>
         // 初始化Hls实例
         let hls = null;
@@ -74,6 +88,53 @@
             const video = document.getElementById('video');
             video.paused ? video.play() : video.pause();
         }
+    </script>
+
+    <script>
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+    const levels = hls.levels;
+    const resolutionSelector = document.createElement('select');
+    levels.forEach((level, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.text = `${level.height}p`;
+        resolutionSelector.appendChild(option);
+    });
+    resolutionSelector.onchange = () => {
+        hls.currentLevel = parseInt(resolutionSelector.value);
+    };
+    document.querySelector('.controls').appendChild(resolutionSelector);
+});
+    </script>
+
+    <script>
+        if (Hls.isSupported()) {
+    // 使用hls.js
+} else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+    // 使用原生播放
+} else {
+    alert('请使用Chrome/Firefox/Edge等现代浏览器');
+}
+    </script>
+
+    <script>
+        hls.on(Hls.Events.ERROR, (event, data) => {
+    console.error('播放错误:', data);
+    if (data.fatal) {
+        switch (data.type) {
+            case Hls.ErrorTypes.NETWORK_ERROR:
+                alert('网络错误，尝试重新加载');
+                hls.startLoad();
+                break;
+            case Hls.ErrorTypes.MEDIA_ERROR:
+                hls.recoverMediaError();
+                break;
+            default:
+                hls.destroy();
+                break;
+        }
+    }
+});
     </script>
 </body>
 </html>
