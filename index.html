@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HLS Player Demo</title>
+    <!-- 引入 Video.js 和 Hls.js -->
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet">
+    <style>
+        body { max-width: 800px; margin: 20px auto; padding: 20px; }
+        .input-group { margin-bottom: 20px; }
+        input { width: 70%; padding: 8px; }
+        button { padding: 8px 16px; }
+    </style>
+</head>
+<body>
+    <h1>自定义 HLS 播放器</h1>
+    
+    <!-- 用户输入区域 -->
+    <div class="input-group">
+        <input type="url" id="m3u8-url" placeholder="输入 M3U8 地址（例如：https://example.com/stream.m3u8）">
+        <button onclick="loadStream()">播放</button>
+    </div>
+
+    <!-- 视频播放器容器 -->
+    <video id="my-player" class="video-js vjs-default-skin" controls></video>
+
+    <!-- 引入依赖库 -->
+    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+    <!-- 播放器逻辑 -->
+    <script>
+        // 初始化播放器
+        const player = videojs('my-player', {
+            controls: true,
+            autoplay: false,
+        });
+
+        // 加载用户输入的 M3U8 流
+        function loadStream() {
+            const m3u8Url = document.getElementById('m3u8-url').value;
+            if (!m3u8Url) {
+                alert('请输入有效的 M3U8 地址！');
+                return;
+            }
+
+            // 销毁旧的 HLS 实例（如果存在）
+            if (window.hls) {
+                window.hls.destroy();
+            }
+
+            // 加载新流
+            if (Hls.isSupported()) {
+                window.hls = new Hls();
+                window.hls.loadSource(m3u8Url);
+                window.hls.attachMedia(player.el().querySelector('video'));
+                window.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                    player.play();
+                });
+            } else if (player.canPlayType('application/vnd.apple.mpegurl')) {
+                // iOS 原生支持 HLS
+                player.src(m3u8Url);
+                player.play();
+            } else {
+                alert('当前浏览器不支持 HLS 播放！');
+            }
+        }
+    </script>
+</body>
+</html>
